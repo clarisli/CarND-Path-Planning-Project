@@ -256,38 +256,51 @@ int main() {
             }
 
             bool too_close = false;
+            bool car_on_right = false;
+            bool car_on_left = false;
 
             for (int i = 0; i < sensor_fusion.size(); i++)
             {
               float d = sensor_fusion[i][6];
-              double target_d = 4*lane + 2;
-              bool is_in_lane = d < (target_d + 2) && d > (target_d - 2);
-              if(is_in_lane)
+              int car_lane = d/4;
+
+              double vx = sensor_fusion[i][3];
+              double vy = sensor_fusion[i][4];
+              double check_speed = sqrt(vx*vx + vy*vy);
+              double check_car_s = sensor_fusion[i][5];
+              check_car_s += ((double)prev_size*.02*check_speed);
+              bool is_close = (check_car_s > car_s) && ((check_car_s - car_s) < 30);
+              
+              if (is_close)
               {
-                double vx = sensor_fusion[i][3];
-                double vy = sensor_fusion[i][4];
-                double check_speed = sqrt(vx*vx + vy*vy);
-                double check_car_s = sensor_fusion[i][5];
-
-                check_car_s += ((double)prev_size*.02*check_speed);
-
-                bool is_close = (check_car_s > car_s) && ((check_car_s - car_s) < 30);
-                if(is_close)
+                int lane_diff = car_lane - lane;
+                if(lane_diff == 0)
                 {
-                  // could be slow down, or change the lane
-                  //ref_vel = 29.5;
                   too_close = true;
-                  if (lane > 0)
-                  {
-                    lane = 0;
-                  }
+                }
+                else if (lane_diff < 0)
+                {
+                  car_on_left = true;
+                }
+                else
+                {
+                  car_on_right = true;
                 }
               }
+
             }
 
             if(too_close)
             {
               ref_vel -= .224;
+              if (lane > 0 && !car_on_left)
+              {
+                lane--;
+              }
+              else if(lane < 2 && !car_on_right)
+              {
+                lane++;
+              }
             }
             else if(ref_vel < 49.5)
             {
