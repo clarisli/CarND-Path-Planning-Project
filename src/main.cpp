@@ -202,7 +202,7 @@ int main() {
   }
 
   int lane = 1; //0-left, 1-middle, 2-right
-  double ref_vel = 49.5;
+  double ref_vel = 0.0;
 
   h.onMessage([&lane, &ref_vel, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
@@ -250,6 +250,12 @@ int main() {
           	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
           	int prev_size = previous_path_x.size();
 
+            if (prev_size > 0) 
+            {
+              car_s = end_path_s;
+            }
+
+            bool too_close = false;
 
             for (int i = 0; i < sensor_fusion.size(); i++)
             {
@@ -269,9 +275,19 @@ int main() {
                 if(is_close)
                 {
                   // could be slow down, or change the lane
-                  ref_vel = 29.5;
+                  //ref_vel = 29.5;
+                  too_close = true;
                 }
               }
+            }
+
+            if(too_close)
+            {
+              ref_vel -= .224;
+            }
+            else if(ref_vel < 49.5)
+            {
+              ref_vel += .244;
             }
 
 
