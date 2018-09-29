@@ -250,6 +250,31 @@ int main() {
           	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
           	int prev_size = previous_path_x.size();
 
+
+            for (int i = 0; i < sensor_fusion.size(); i++)
+            {
+              float d = sensor_fusion[i][6];
+              double target_d = 4*lane + 2;
+              bool is_in_lane = d < (target_d + 2) && d > (target_d - 2);
+              if(is_in_lane)
+              {
+                double vx = sensor_fusion[i][3];
+                double vy = sensor_fusion[i][4];
+                double check_speed = sqrt(vx*vx + vy*vy);
+                double check_car_s = sensor_fusion[i][5];
+
+                check_car_s += ((double)prev_size*.02*check_speed);
+
+                bool is_close = (check_car_s > car_s) && ((check_car_s - car_s) < 30);
+                if(is_close)
+                {
+                  // could be slow down, or change the lane
+                  ref_vel = 29.5;
+                }
+              }
+            }
+
+
             vector<double> ptsx;
             vector<double> ptsy;
 
