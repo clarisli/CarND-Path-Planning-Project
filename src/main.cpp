@@ -277,6 +277,10 @@ int main() {
                   // could be slow down, or change the lane
                   //ref_vel = 29.5;
                   too_close = true;
+                  if (lane > 0)
+                  {
+                    lane = 0;
+                  }
                 }
               }
             }
