@@ -1,5 +1,11 @@
 # CarND-Path-Planning-Project
 Self-Driving Car Engineer Nanodegree Program
+
+[//]: # (Image References)
+
+[image1]: ./images/result.png
+
+![alt text][image1]
    
 ### Simulator.
 You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2).
@@ -86,55 +92,50 @@ A really helpful resource for doing this project and creating smooth trajectorie
     cd uWebSockets
     git checkout e94b6e1
     ```
+    
+## Implementation
 
-## Editor Settings
+### Requirements
 
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
+My result fulfilled following requirements:
 
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
+* The code compiles correctly
+* The car drives according to the speed limit
+* Max Acceleration and Jerk are nto Exceeded
+* Car does not have collisions
+* The car stays in its lane, except for the time between changing lanes
+* The car is able to change lanes
 
-## Code Style
+### Reflections
 
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
+A basic planner was implemented without cost functions. I obtained other cars' positions and velocities from the sensor fusion data, and I compared their positions with my car's position to determine wheter there's a car ahead of me, on my right, or on my left. Then I used these information to determine to stay in the same lane or change to another. I did this in lines 266 to 288 in `main.cpp`.
 
-## Project Instructions and Rubric
+I used a simple mechanism to prevent exceeding the maximum acceleration and jerk. If my car is getting too close to the car ahead, I reduce its velocity by 0.224. If no cars are blocking my lane, I increase its velocity by 0.224, and I only do this till it reaches the speed limit 50 MPH. The goal here was to accelerate or de-accelerate gradually. I did this in lines 290 to 2305 in `main.cpp`.
 
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
+Once I've decided on what to do next, I used `spline` library to generate the trajectory for my car to follow. The width of each lane is 4 m, I used it to calculate the target d position with:
 
+```
+double target_d = 2+4*lane;
+```
+The 2 is there to make the d value at the center of the lane.
 
-## Call for IDE Profiles Pull Requests
+To smooth out the result, the waypoints from previous path were added to the trajectory. If the car has no data from previous path, I generated an artificial waypoint using its current yaw:
 
-Help your fellow students!
+```
+double prev_car_x = car_x - cos(car_yaw);
+double prev_car_y = car_y - sin(car_yaw);
+```
 
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to ensure
-that students don't feel pressured to use one IDE or another.
+Then I generated 3 additional waypoints to get to my target lane:
 
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
+```
+vector<double> next_wp0 = getXY(car_s + 30, target_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+vector<double> next_wp1 = getXY(car_s + 60, target_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+vector<double> next_wp2 = getXY(car_s + 90, target_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);      
+```
 
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
+I did this in lines 308 to 400 in `main.cpp`.
 
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
+### Future Works
 
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
-
+My current approach could be improved with a finite state machine and cost functions. I'm working to generate a trajectory for each possible next state, and then choose the trajectory with the lowest cost.

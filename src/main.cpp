@@ -271,22 +271,20 @@ int main() {
               check_car_s += ((double)prev_size*.02*check_speed);
               bool is_close = (check_car_s > car_s) && ((check_car_s - car_s) < 30);
               
-              if ((check_car_s > car_s) && ((check_car_s - car_s) < 30))
+              int lane_diff = car_lane - lane;
+              if (lane_diff == 0 && ((check_car_s > car_s) && ((check_car_s - car_s) < 30)))
               {
-                int lane_diff = car_lane - lane;
-                if(lane_diff == 0)
-                {
                   too_close = true;
-                }
-                else if (lane_diff < 0 && fabs(check_car_s - car_s) > 30)
-                {
-                  car_on_left = true;
-                }
-                else if (lane_diff > 0 && fabs(check_car_s - car_s) > 30)
-                {
-                  car_on_right = true;
-                }
-                }
+              }
+
+              if (lane_diff < 0 && fabs(check_car_s - car_s) > 30)
+              {
+                car_on_left = true;
+              }
+              if (lane_diff > 0 && fabs(check_car_s - car_s) > 30)
+              {
+                car_on_right = true;
+              }
             }
 
             if(too_close)
